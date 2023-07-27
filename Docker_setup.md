@@ -124,6 +124,9 @@ docker run -d -p 90:80 ahskhan/tech221-nginx:v1
 docker ps
 
 ### create docker image (commit, push and run)
+
+[Docker commit documention](https://docs.docker.com/engine/reference/commandline/commit/)
+
 ```
 1. docker commit a222aa2d5657 ks241/tech241-nginx:v1
 
@@ -132,3 +135,11 @@ docker ps
 3. docker run -d -p 373:80 ks241/tech241-nginx:v1
 
 ```
+
+### Docker Hub repo
+
+![Alt text](<images/docker hub repos.png>)
+
+### Docker hub tags
+
+![Alt text](images/dockerhub-repo-tags.png)
