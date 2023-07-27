@@ -113,7 +113,7 @@ docker start a222aa2d5657
 
 ```
 
-### docker execute container shell
+### docker execute container shell and edit
 ```
 docker exec -it a222aa2d5657 sh
 ```
@@ -127,14 +127,17 @@ docker ps
 
 [Docker commit documention](https://docs.docker.com/engine/reference/commandline/commit/)
 
+
 ```
 1. docker commit a222aa2d5657 ks241/tech241-nginx:v1
-
-2. docker push ks241/tech241-nginx:v1
-
-3. docker run -d -p 373:80 ks241/tech241-nginx:v1
-
 ```
+```
+2. docker push ks241/tech241-nginx:v1
+```
+```
+3. docker run -d -p 373:80 ks241/tech241-nginx:v1
+```
+`localhost:373`
 
 ### Docker Hub repo
 
@@ -143,3 +146,39 @@ docker ps
 ### Docker hub tags
 
 ![Alt text](images/dockerhub-repo-tags.png)
+
+# Create container for Node.js APP
+
+1. CD into your application folder
+2. Nano Dockerfile 
+
+```
+# Use the official Node.js image as the base image
+FROM node:12
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the package.json and package-lock.json files to the container
+COPY package*.json ./
+
+# Install app dependencies
+RUN npm install
+
+# Copy the rest of the application code to the container
+COPY app /app
+
+# Expose the port that the Node.js app is listening on
+EXPOSE 3000
+
+# Command to start the Node.js application
+CMD ["npm", "start"]
+
+
+
+```
+3. docker build -t ks241/tech241-nodejs:v1 .
+4. docker run -d -p 3000:3000 ks241/tech241-nodejs:v1
+5. docker push ks241/tech241-nodejs:v1
+6. localhost:3000
+
