@@ -76,4 +76,59 @@ wsl --set-default-version 2
 ```
 ![Alt text](<images/docker home .png>)
 
+# How does docker API work?
 
+Docker API provides a way for external programs and tools to interact with the Docker daemon and manage Docker containers, images, networks, and other resources. 
+
+The API allows developers to automate and integrate Docker functionalities into their own applications, enabling more control and flexibility over Docker operations.
+
+![Alt text](<images/docker api .png>)
+
+# Docker Introduction commands
+
+### run hello-world
+```
+docker run hello-world
+```
+
+### Check docker processes
+
+```
+docker ps
+docker ps -a
+```
+
+### Run nginx port 80
+```
+docker run -d -p 80:80 nginx
+docker ps
+```
+### stop container ps
+```
+docker stop a222aa2d5657
+```
+## start container ps
+```
+docker start a222aa2d5657
+
+```
+
+### docker execute container shell
+```
+docker exec -it a222aa2d5657 sh
+```
+### Run shahrukh's image 
+
+
+docker run -d -p 90:80 ahskhan/tech221-nginx:v1
+docker ps
+
+### create docker image (commit, push and run)
+```
+1. docker commit a222aa2d5657 ks241/tech241-nginx:v1
+
+2. docker push ks241/tech241-nginx:v1
+
+3. docker run -d -p 373:80 ks241/tech241-nginx:v1
+
+```
