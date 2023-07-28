@@ -23,7 +23,7 @@ Kubernetes is an open-source container orchestration platform designed to automa
 
 - portable; consistency across env, easy to move applications between cloud providers or on prem.
 
-- latge active community for extensive support, documentation and add ons
+- large active community for extensive support, documentation and add ons
 
 - industry standard and future proof; widely used by industry, in demand skills and enhaces career prospect.
 
@@ -89,3 +89,118 @@ Equality-Based Selectors: These match resources whose labels have specific key-v
 
 Set-Based Selectors: These match resources using a set of label requirements (AND, OR, NOT conditions).
 ```
+
+# Deployment for nginx
+
+### step 1 - Create file yml for nginx
+```
+nano nginx-k8.yml
+```
+```
+apiVersion: apps/v1 # which api to use for deployment
+kind: Deployment # pod - service what kind of service/object you want to create
+
+ 
+
+# what would you like to call it - name the service/object
+metadata:
+  name: nginx-deployment # naming the deployment
+
+ 
+
+spec:
+  selector:
+    matchLabels:
+      app: nginx # look for this label to match with k8 service
+    # Let's create replica set of this with instances/pods
+  replicas: 3 # 3 pods
+    # template to use its label for k8 service to launch in the browser
+  template:
+    metadata:
+      labels:
+        app: nginx # This label connects to
+                   # the service or any other k8 components
+  # Let's define the container spec
+    spec:
+      containers:
+      - name: nginx
+        image: ks241/tech241-nginx:v2
+        ports:
+        - containerPort: 80
+
+
+```
+
+### step 2 create deployment 
+
+```
+kubectl create -f nginx-k8.yml
+
+```
+### step 3 - check deployment 
+
+```
+kubectl get deployment
+```
+
+### step 4 - to delete deployment in k8
+
+```
+kubectl delete deployment nginx-k8.yml
+```
+
+### create yml file for nodejs
+
+```
+nodejs-k8.yml
+
+```
+```
+apiVersion: apps/v1 # which api to use for deployment
+kind: Deployment # pod - service what kind of service/object you want to create
+
+ 
+
+# what would you like to call it - name the service/object
+metadata:
+  name: nodejs-deployment # naming the deployment
+
+ 
+
+spec:
+  selector:
+    matchLabels:
+      app: nodejs # look for this label to match with k8 service
+    # Let's create replica set of this with instances/pods
+  replicas: 3 # 3 pods
+    # template to use its label for k8 service to launch in the browser
+  template:
+    metadata:
+      labels:
+        app: nodejs # This label connects to
+                   # the service or any other k8 components
+  # Let's define the container spec
+    spec:
+      containers:
+      - name: nodejs
+        image: ks241/tech241-nodejs:v1
+        ports:
+        - containerPort: 3000
+
+
+```
+
+### step create deployment 
+
+```
+kubectl create -f nodejs-k8.yml
+
+```
+### step - check deployment 
+
+```
+kubectl get deployment
+```
+
+![Alt text](<images/k8 get deployment.png>)
+
