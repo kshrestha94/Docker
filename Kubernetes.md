@@ -30,14 +30,14 @@ Kubernetes is an open-source container orchestration platform designed to automa
 ```
 
 ### Who is using K8?
-
+```
 - AWS, Azure and Google.
 
 - Apple, Uber, Netflix and VW
-
+```
 ### benifits to business?
 
-
+```
 Cost Efficiency: 
 
 Faster Deployment: 
@@ -53,7 +53,7 @@ Support for Microservices: Facilitate the adoption of microservices architecture
 Competitive Advantage: Embrace containerization and modern application development practices, staying ahead in the market.
 
 Ecosystem and Support: Benefit from a robust ecosystem, vast community support, and a wide range of tools and integrations.
-
+```
 
 ### what are K8 objects - Pods - Deployment/s - Services - replica sets -
 
