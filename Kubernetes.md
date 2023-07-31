@@ -204,3 +204,102 @@ kubectl get deployment
 
 ![Alt text](<images/k8 get deployment.png>)
 
+
+# k8 Deployment Architecture
+
+![Alt text](<images/k8 deployment.png>)
+
+```
+Within a cluster i created a delployment from creating a file that codified step. I instructed k8 to create 3 pods with matching selectors and labels.
+
+k8 will create a replica set template for the pod instances associated to the label. Within the replica set you have three pods.
+Deleting the delopyment will delete all others includng the pods and replica.
+
+The service will act as a loadbalancer to access the app with the specified port assgined in the service script.
+
+```
+
+### Creating a service.yml
+
+```
+ create file nginx-service.yml 
+ ```
+
+ ```
+---
+# Select the type of API version and type of service/object
+apiVersion: v1
+kind: Service
+# Metadata for name
+metadata:
+  name: nginx-svc
+  namespace: default # sre
+# Specification to include ports selector to connect to the deployment
+spec:
+  ports:
+  - nodePort: 30001 # range is 30000-32768
+    port: 80
+    targetPort: 80
+
+# Lets define the selector and label to connect to nginx deployment
+  selector:
+    app: nginx # this label connects this service to deployment
+
+  # Creating NodePort type of deployment
+  type: NodePort # also use LoadBalancer - for local use cluster IP
+
+
+ ```
+
+ ### create nginx-service command 
+
+```
+ kubectl create -f nginx-service.yml
+```
+
+
+### Creating a service for nodejs
+
+```
+ create file:  nodejs-service.yml 
+ ```
+
+```
+---
+# Select the type of API version and type of service/object
+apiVersion: v1
+kind: Service
+# Metadata for name
+metadata:
+  name: nodejs-svc
+  namespace: default # sre
+# Specification to include ports selector to connect to the deployment
+spec:
+  ports:
+  - nodePort: 30002 # range is 30000-32768
+    port: 3000
+    targetPort: 3000
+
+ 
+
+# Lets define the selector and label to connect to nginx deployment
+  selector:
+    app: nodejs # this label connects this service to deployment
+
+ 
+
+  # Creating NodePort type of deployment
+  type: NodePort # also use LoadBalancer - for local use cluster IP
+ 
+
+```
+
+### check services running 
+
+```
+kubectl get svc
+```
+
+![Alt text](<images/k8 get service.png>)
+
+
