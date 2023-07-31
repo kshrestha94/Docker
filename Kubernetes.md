@@ -302,4 +302,251 @@ kubectl get svc
 
 ![Alt text](<images/k8 get service.png>)
 
+# Connecting Mongodb to the App
+
+
+### 1. Dockerfile for mongo 
+
+`nano mongof.conf`
+
+```
+# mongod.conf
+# Where and how to store data.
+
+storage:
+  dbPath: /data/db
+  journal:
+    enabled: true
+  wiredTiger:
+    engineConfig:
+      cacheSizeGB: 1
+
+# Basic settings
+systemLog:
+  destination: file
+  path: /var/log/mongodb/mongod.log
+  logAppend: true
+
+# Network interfaces
+net:
+  bindIp: 0.0.0.0
+  port: 27017
+
+# Security
+
+security:
+  authorization: enabled
+```
+
+`nano Dockerfile`
+
+```
+# Base Image
+FROM mongo:3.4
+
+# Set working directory
+WORKDIR /data
+
+# Copy the modified configuration file into the Docker image
+COPY mongod.conf /etc/mongod.conf
+
+
+# port mapping
+EXPOSE 27017
+```
+
+### 2. build container for dockerfile mongo
+
+`docker build -t ks241/tech241-mongodb:v1 .`
+
+### 3. run container for mongo
+
+`docker run -d -p 27017:27017 ks241/tech241-mongodb:v1`
+
+### 4. create delopment for mongo 
+
+```
+apiVersion: apps/v1 # which API to use for deployment
+kind: Deployment # pod - service what kind of service you want to create
+# what would you like to call it - name the service/object
+metadata:
+  name: mongo # naming the deployment
+spec:
+  selector:
+    matchLabels:
+      app: mongo #look for this label to match with k8 service
+    # let's create a replica set of this with instances/pods
+  replicas: 3 # 3 pods
+    # template to use it's label for k8 service to launch in the browser
+  template:
+    metadata:
+      labels:
+        app: mongo # this label connects to the service or any other k8 components
+  # let's define the container spec
+    spec:
+      containers:
+        - name: mongo
+          image: ks241/tech241-mongodb:v1 # use the image that you built
+          ports:
+            - containerPort: 27017
+```
+
+`kubectl create -f mongo-k8.yml`
+
+
+### 5. check deployment status
+
+`kubectl get deployment`
+
+### 6. create service for mongo
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+spec:
+  selector:
+    app: mongo
+  ports:
+    - port: 27017
+      targetPort: 27017
+
+```
+
+`kubectl create -f mongo-service.yml`
+
+### 7. check service status
+
+`kubectl get svc`
+
+### 8. edit dockerfile for nodejs 
+
+`nano Dockerfile`
+
+```
+
+# Use the official Node.js image as the base image
+FROM node:12
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the package.json and package-lock.json files to the container
+COPY package*.json ./
+
+# Install app dependencies
+RUN npm install
+
+# Copy the rest of the application code to the container
+COPY app /app
+
+# Expose the port that the Node.js app is listening on
+EXPOSE 3000
+
+ENV DB_HOST=mongodb://172.17.0.2:27017/posts
+
+# Command to start the Node.js application
+CMD ["npm", "start"]
+
+```
+
+
+### 9. create container for nodejs
+
+`docker build -t ks241/tech241-nodejs:v1 .`
+
+### 10. run container for nodejs app
+
+`docker run -d -p 3000:3000 ks241/tech241-nodejs:v1`
+
+### 11. create nodejs delopment 
+
+```
+apiVersion: apps/v1 # which api to use for deployment
+kind: Deployment # pod - service what kind of service/object you want to create
+
+ 
+
+# what would you like to call it - name the service/object
+metadata:
+  name: nodejs-deployment # naming the deployment
+
+ 
+
+spec:
+  selector:
+    matchLabels:
+      app: nodejs # look for this label to match with k8 service
+    # Let's create replica set of this with instances/pods
+  replicas: 3 # 3 pods
+    # template to use its label for k8 service to launch in the browser
+  template:
+    metadata:
+      labels:
+        app: nodejs # This label connects to
+                   # the service or any other k8 components
+  # Let's define the container spec
+    spec:
+      containers:
+      - name: nodejs
+        image: ks241/tech241-nodejs:v1
+        ports:
+        - containerPort: 3000
+        env:
+          - name: DB_HOST
+            value: mongodb://mongo:27017/posts
+        imagePullPolicy: Always
+```
+
+`kubectl create -f nodejs-k8.yml`
+
+### 12. check deployment status
+
+`kubectl get deployment`
+
+### 13. create service for nodejs
+
+```
+---
+# Select the type of API version and type of service/object
+apiVersion: v1
+kind: Service
+# Metadata for name
+metadata:
+  name: nodejs-svc
+  namespace: default # sre
+# Specification to include ports selector to connect to the deployment
+spec:
+  ports:
+  - nodePort: 30002 # range is 30000-32768
+    port: 3000
+    targetPort: 3000
+
+ 
+
+# Lets define the selector and label to connect to nginx deployment
+  selector:
+    app: nodejs # this label connects this service to deployment
+
+ 
+
+  # Creating NodePort type of deployment
+  type: NodePort # also use LoadBalancer - for local use cluster IP
+ 
+```
+`kubectl create -f nodejs-service.yml`
+
+### 14. service status
+`kubectl get svc`
+
+### 15. check pods status and extract if for seeding data
+`kubectl get pods`
+
+### 16. Ensure the posts page is seeding information 
+`kubectl exec nodejs-deployment-6f4f78677f-74glc env node seeds/seed.js`
+
+![Alt text](<images/db post working.png>)
+
+
 
