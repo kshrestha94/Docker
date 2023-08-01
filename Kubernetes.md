@@ -548,5 +548,130 @@ spec:
 
 ![Alt text](<images/db post working.png>)
 
+# Live testing of self healing on k8 (change management)
+
+Pod resources can be terminated to allows K8 to self healing and regenerate the instances.  
+
+### check deployment 
+`kubectl get deployment`
+
+### edit deployment (notepad)
+`kubectl edit deploy nginx-deployment`
+
+```
+Use the notepad editor to make changes to the replica to either increase or decrease the number; save and exit.
+```
+### check status of deployment
+
+`kubectl get deployment`
 
 
+# Adding resources:
+
+add script to nodejs deployment 
+
+```
+# add resources required 
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: "1"
+          requests:
+            memory: 256Mi
+            cpu: "0.2"
+```
+
+# HPA Horizontal Pod Autoscaling for either nginx, nodejs or mongo
+
+### create a file for nginx_hpa.yml
+
+```
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler #(hpa)
+
+metadata:
+  name: nginx-deployment
+  namespace: default
+  
+spec:
+  maxReplicas: 9 #(max nuber of instances/pods)
+  minReplicas: 3 #(min nuber of instances/pods)
+  scaleTargetRef: # Targets the node deployment
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx
+  targetCPUUtilizationPercentage: 50  # 50% of CPU use
+
+```
+
+### apply the HPA configuration
+
+`kubectl apply -f nginx_hpa.yml`
+
+### monitor HPA
+`kubectl get hpa`
+
+# k8 Volumes 
+
+In K8, volumes are used to provide persistent storage to pods. They allow data to survive across pod restarts and help in decoupling storage from the lifecycle of pods. 
+
+### PersistentVolume (PV) and PersistentVolumeClaim (PVC):
+PersistentVolumes and PersistentVolumeClaims are used to provide persistent storage that survives across pod restarts and rescheduling. A PersistentVolume (PV) is a cluster-wide resource, while a PersistentVolumeClaim (PVC) is a request for storage by a user. Users request storage by creating a PVC, and Kubernetes dynamically provisions a matching PV to satisfy the claim.
+
+![Alt text](images/pvc.png)
+
+Persistent Volume — low level representation of a storage volume.
+
+Persistent Volume Claim — binding between a Pod and Persistent Volume.
+
+Storage Class — allows for dynamic provisioning of Persistent Volumes.
+
+### PV and PCV for nginx
+
+`nginx-pv.yml`
+```
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  finalizers:
+  - kubernetes.io/pv-protection
+  labels:
+    type: local
+  name: nginx-pv 
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  hostPath:
+    path: /tmp/data
+    type: ""
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+
+
+```
+
+`nginx-pvc.yml`
+```
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nginx-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+
+```
+
+```
+# create pv and pvc 
+
+kubectl create -f nginx-pv.yml
+kubectl create -f nginx-pvc.yml
+kubectl get pv
+```
