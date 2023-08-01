@@ -628,7 +628,7 @@ Storage Class — allows for dynamic provisioning of Persistent Volumes.
 
 ### PV and PCV for nginx
 
-`nginx-pv.yml`
+### create file `nginx-pv.yml`
 ```
 apiVersion: v1
 kind: PersistentVolume
@@ -652,7 +652,7 @@ spec:
 
 ```
 
-`nginx-pvc.yml`
+### create file `nginx-pvc.yml`
 ```
 apiVersion: v1
 kind: PersistentVolumeClaim
