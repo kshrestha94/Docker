@@ -675,3 +675,234 @@ kubectl create -f nginx-pv.yml
 kubectl create -f nginx-pvc.yml
 kubectl get pv
 ```
+
+# Creating a combined Yaml file to run multiple objects; PV-mongo, PVC-mongo, Mongo Deployment, mongo service mongo hpa, pv-nodejs, pvc-nodejs, nodejs deployment, nodejs service, nodejs hpa.
+
+```
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  finalizers:
+  - kubernetes.io/pv-protection
+  labels:
+    type: local
+  name: mongo-pv 
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  hostPath:
+    path: /tmp/data
+    type: ""
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+
+
+apiVersion: apps/v1 # which API to use for deployment
+kind: Deployment # pod - service what kind of service you want to create
+# what would you like to call it - name the service/object
+metadata:
+  name: mongo # naming the deployment
+spec:
+  selector:
+    matchLabels:
+      app: mongo #look for this label to match with k8 service
+    # let's create a replica set of this with instances/pods
+  replicas: 3 # 3 pods
+    # template to use it's label for k8 service to launch in the browser
+  template:
+    metadata:
+      labels:
+        app: mongo # this label connects to the service or any other k8 components
+  # let's define the container spec
+    spec:
+      containers:
+        - name: mongo
+          image: ks241/tech241-mongodb:v1 # use the image that you built
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: storage
+              mountPath: /data/db
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: mongo-db         
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+spec:
+  selector:
+    app: mongo
+  ports:
+    - port: 27017
+      targetPort: 27017
+
+---
+
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler #(hpa)
+
+metadata:
+  name: mongo-deployment
+  namespace: default
+  
+spec:
+  maxReplicas: 6 #(max nuber of instances/pods)
+  minReplicas: 3 #(min nuber of instances/pods)
+  scaleTargetRef: # Targets the node deployment
+    apiVersion: apps/v1
+    kind: Deployment
+    name: mongo
+  targetCPUUtilizationPercentage: 50  # 50% of CPU use
+
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  finalizers:
+  - kubernetes.io/pv-protection
+  labels:
+    type: local
+  name: nodejs-pv 
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  hostPath:
+    path: /tmp/data
+    type: ""
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+
+---
+
+  
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nodejs-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+
+apiVersion: apps/v1 # which api to use for deployment
+kind: Deployment # pod - service what kind of service/object you want to create
+
+ 
+
+# what would you like to call it - name the service/object
+metadata:
+  name: nodejs-deployment # naming the deployment
+
+ 
+
+spec:
+  selector:
+    matchLabels:
+      app: nodejs # look for this label to match with k8 service
+    # Let's create replica set of this with instances/pods
+  replicas: 3 # 3 pods
+    # template to use its label for k8 service to launch in the browser
+  template:
+    metadata:
+      labels:
+        app: nodejs # This label connects to
+                   # the service or any other k8 components
+  # Let's define the container spec
+    spec:
+      containers:
+      - name: nodejs
+        image: ks241/tech241-nodejs:v1
+        ports:
+        - containerPort: 3000
+        env:
+          - name: DB_HOST
+            value: mongodb://mongo:27017/posts
+        imagePullPolicy: Always
+# add resources required 
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: "1"
+          requests:
+            memory: 256Mi
+            cpu: "0.2"
+
+
+
+---
+
+# Select the type of API version and type of service/object
+apiVersion: v1
+kind: Service
+# Metadata for name
+metadata:
+  name: nodejs-svc
+  namespace: default # sre
+# Specification to include ports selector to connect to the deployment
+spec:
+  ports:
+  - nodePort: 30002 # range is 30000-32768
+    port: 3000
+    targetPort: 3000
+
+ 
+
+# Lets define the selector and label to connect to nginx deployment
+  selector:
+    app: nodejs # this label connects this service to deployment
+
+ 
+
+  # Creating NodePort type of deployment
+  type: NodePort # also use LoadBalancer - for local use cluster IP
+ 
+---
+
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler #(hpa)
+
+metadata:
+  name: nodejs-deployment
+  namespace: default
+  
+spec:
+  maxReplicas: 9 #(max nuber of instances/pods)
+  minReplicas: 3 #(min nuber of instances/pods)
+  scaleTargetRef: # Targets the node deployment
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nodejs
+  targetCPUUtilizationPercentage: 50  # 50% of CPU use
+
+```
